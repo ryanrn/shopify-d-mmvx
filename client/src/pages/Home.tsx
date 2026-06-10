@@ -1,25 +1,23 @@
-import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
-import { Streamdown } from 'streamdown';
-
 /**
- * All content in this page are only for example, replace with your own feature implementation
- * When building pages, remember your instructions in Frontend Best Practices, Design Guide and Common Pitfalls
+ * DØMMVX — Home Page
+ * Design Philosophy: "Void Architecture" — Brutalismo Espacial
+ * 
+ * Estrutura:
+ * 1. Hero Section fullscreen (100vh) com tipografia gigante + imagem editorial
+ * 2. Product Details com specs e imagens
+ * 3. Footer minimalista
  */
-export default function Home() {
-  // If theme is switchable in App.tsx, we can implement theme toggling like this:
-  // const { theme, toggleTheme } = useTheme();
 
+import HeroSection from "@/components/HeroSection";
+import ProductDetails from "@/components/ProductDetails";
+import Footer from "@/components/Footer";
+
+export default function Home() {
   return (
-    <div className="min-h-screen flex flex-col">
-      <main>
-        {/* Example: lucide-react for icons */}
-        <Loader2 className="animate-spin" />
-        Example Page
-        {/* Example: Streamdown for markdown rendering */}
-        <Streamdown>Any **markdown** content</Streamdown>
-        <Button variant="default">Example Button</Button>
-      </main>
+    <div className="min-h-screen" style={{ backgroundColor: "#0A0A0A" }}>
+      <HeroSection />
+      <ProductDetails />
+      <Footer />
     </div>
   );
 }
