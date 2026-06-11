@@ -9,7 +9,13 @@
  * - Zero border-radius — brutalismo puro
  */
 
+import { useCart } from "@/contexts/CartContext";
+import { trpc } from "@/lib/trpc";
+import { ShoppingBag } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
+
+const PRODUCT_HANDLE = "dommvx-jaqueta-vinho-drop-001";
 
 const MODEL_IMAGE = "https://d2xsxph8kpxj0f.cloudfront.net/310519663137495765/8bdmdadQ43ueUq4uRA5LzB/dommvx-model-jacket-6DKVfMkh7k9eagSTiHaYzB.webp";
 const JACKET_IMAGE = "https://d2xsxph8kpxj0f.cloudfront.net/310519663137495765/8bdmdadQ43ueUq4uRA5LzB/dommvx-jacket-hero-SXiXewszXRDncoH6vweeyr.webp";
@@ -21,6 +27,26 @@ export default function HeroSection() {
 
   const unitsLeft = 7;
   const totalUnits = 50;
+
+  const { addItem, openCart, itemCount, loading: cartLoading } = useCart();
+  const { data: product } = trpc.commerce.products.byHandle.useQuery({
+    handle: PRODUCT_HANDLE,
+  });
+
+  const handleAcquire = async () => {
+    const variant =
+      product?.variants.find((v) => v.availableForSale) ?? product?.variants[0];
+    if (!variant) {
+      // Fallback: rolar até a seção de produto (produto ainda carregando)
+      document.getElementById("produto")?.scrollIntoView({ behavior: "smooth" });
+      return;
+    }
+    try {
+      await addItem(variant.id, 1);
+    } catch {
+      toast("Não foi possível adicionar à sacola. Tente novamente.");
+    }
+  };
 
   useEffect(() => {
     const timer = setTimeout(() => setIsLoaded(true), 150);
@@ -103,17 +129,34 @@ export default function HeroSection() {
               >
                 DØMMVX
               </span>
-              <div className="hidden md:flex items-center gap-8">
-                {["COLEÇÃO", "SOBRE", "CONTATO"].map((item) => (
-                  <a
-                    key={item}
-                    href="#"
-                    className="text-[#F5F5F5]/50 text-[10px] tracking-[0.25em] uppercase hover:text-[#F5F5F5] transition-colors duration-500"
-                    style={{ fontFamily: "var(--font-mono)" }}
-                  >
-                    {item}
-                  </a>
-                ))}
+              <div className="flex items-center gap-6 md:gap-8">
+                <div className="hidden md:flex items-center gap-8">
+                  {["COLEÇÃO", "SOBRE", "CONTATO"].map((item) => (
+                    <a
+                      key={item}
+                      href={item === "COLEÇÃO" ? "#produto" : "#"}
+                      className="text-[#F5F5F5]/50 text-[10px] tracking-[0.25em] uppercase hover:text-[#F5F5F5] transition-colors duration-500"
+                      style={{ fontFamily: "var(--font-mono)" }}
+                    >
+                      {item}
+                    </a>
+                  ))}
+                </div>
+                <button
+                  onClick={openCart}
+                  className="relative flex items-center text-[#F5F5F5]/60 hover:text-[#F5F5F5] transition-colors duration-300 active:scale-90"
+                  aria-label="Abrir sacola"
+                >
+                  <ShoppingBag size={16} strokeWidth={1.5} />
+                  {itemCount > 0 && (
+                    <span
+                      className="absolute -top-2 -right-2.5 min-w-[14px] h-[14px] px-1 flex items-center justify-center bg-[#5C1A1A] text-[#F5F5F5] text-[8px] leading-none"
+                      style={{ fontFamily: "var(--font-mono)" }}
+                    >
+                      {itemCount}
+                    </span>
+                  )}
+                </button>
               </div>
             </div>
           </nav>
@@ -240,13 +283,17 @@ export default function HeroSection() {
             </div>
 
             {/* CTA Button */}
-            <button className="group relative border border-[#F5F5F5]/15 px-8 lg:px-10 py-3 lg:py-4 overflow-hidden transition-all duration-500 hover:border-[#F5F5F5]/50">
+            <button
+              onClick={handleAcquire}
+              disabled={cartLoading}
+              className="group relative border border-[#F5F5F5]/15 px-8 lg:px-10 py-3 lg:py-4 overflow-hidden transition-all duration-500 hover:border-[#F5F5F5]/50 disabled:opacity-60"
+            >
               <span className="absolute inset-0 bg-[#F5F5F5] transform -translate-x-full group-hover:translate-x-0 transition-transform duration-700 ease-[cubic-bezier(0.23,1,0.32,1)]" />
               <span
                 className="relative text-[9px] lg:text-[10px] tracking-[0.4em] uppercase text-[#F5F5F5] group-hover:text-[#0A0A0A] transition-colors duration-500"
                 style={{ fontFamily: "var(--font-mono)" }}
               >
-                ADQUIRIR
+                {cartLoading ? "ADICIONANDO..." : "ADQUIRIR"}
               </span>
             </button>
           </div>
