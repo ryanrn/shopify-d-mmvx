@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
+import { InsertUser, siteSettings, users } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -90,3 +90,61 @@ export async function getUserByOpenId(openId: string) {
 }
 
 // TODO: add feature queries here as your schema grows.
+
+
+/* -------------------------------------------------------------------------- */
+/*                              Site settings                                 */
+/* -------------------------------------------------------------------------- */
+
+const SETTINGS_ID = 1;
+
+/** Lê (e garante a existência de) a linha singleton de configuração do site. */
+export async function getSiteSettings() {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot read site settings: database not available");
+    return null;
+  }
+
+  const rows = await db
+    .select()
+    .from(siteSettings)
+    .where(eq(siteSettings.id, SETTINGS_ID))
+    .limit(1);
+
+  if (rows.length > 0) return rows[0];
+
+  // Auto-cria a linha singleton caso ainda não exista.
+  await db
+    .insert(siteSettings)
+    .values({ id: SETTINGS_ID, passwordGateEnabled: false })
+    .onDuplicateKeyUpdate({ set: { id: SETTINGS_ID } });
+
+  const seeded = await db
+    .select()
+    .from(siteSettings)
+    .where(eq(siteSettings.id, SETTINGS_ID))
+    .limit(1);
+  return seeded[0] ?? null;
+}
+
+/** Atualiza campos da configuração do site (gate e/ou hash de senha). */
+export async function updateSiteSettings(patch: {
+  passwordGateEnabled?: boolean;
+  passwordHash?: string | null;
+}) {
+  const db = await getDb();
+  if (!db) {
+    throw new Error("Database not available");
+  }
+
+  // Garante que a linha exista antes de atualizar.
+  await getSiteSettings();
+
+  await db
+    .update(siteSettings)
+    .set(patch)
+    .where(eq(siteSettings.id, SETTINGS_ID));
+
+  return getSiteSettings();
+}

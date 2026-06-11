@@ -131,14 +131,19 @@ export default function HeroSection() {
               </span>
               <div className="flex items-center gap-6 md:gap-8">
                 <div className="hidden md:flex items-center gap-8">
-                  {["COLEÇÃO", "SOBRE", "CONTATO"].map((item) => (
+                  {[
+                    { label: "COLEÇÃO", href: "#produto" },
+                    { label: "LOOKBOOK", href: "/lookbook" },
+                    { label: "SOBRE", href: "#" },
+                    { label: "CONTATO", href: "#" },
+                  ].map((item) => (
                     <a
-                      key={item}
-                      href={item === "COLEÇÃO" ? "#produto" : "#"}
+                      key={item.label}
+                      href={item.href}
                       className="text-[#F5F5F5]/50 text-[10px] tracking-[0.25em] uppercase hover:text-[#F5F5F5] transition-colors duration-500"
                       style={{ fontFamily: "var(--font-mono)" }}
                     >
-                      {item}
+                      {item.label}
                     </a>
                   ))}
                 </div>

@@ -1,4 +1,4 @@
-import { int, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
+import { boolean, int, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
 
 /**
  * Core user table backing auth flow.
@@ -25,4 +25,18 @@ export const users = mysqlTable("users", {
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 
-// TODO: Add your tables here
+/**
+ * Single-row configuration for the public site.
+ * `id` is always 1 (singleton). Controls the global password gate.
+ */
+export const siteSettings = mysqlTable("site_settings", {
+  id: int("id").primaryKey().default(1),
+  /** Quando true, o site público fica bloqueado por tela de senha. */
+  passwordGateEnabled: boolean("passwordGateEnabled").default(false).notNull(),
+  /** Hash (scrypt) da senha de acesso. Null quando nunca configurada. */
+  passwordHash: varchar("passwordHash", { length: 255 }),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type SiteSettings = typeof siteSettings.$inferSelect;
+export type InsertSiteSettings = typeof siteSettings.$inferInsert;
