@@ -1,7 +1,7 @@
-/**
+﻿/**
  * Shopify Storefront API adapter.
  *
- * All Storefront access — catalog reads and cart reads/writes — goes through
+ * All Storefront access â€” catalog reads and cart reads/writes â€” goes through
  * this module. The Admin token is intentionally not used in app code; product
  * setup is performed once via the Shopify MCP tools.
  *
@@ -14,7 +14,7 @@
  *      addCartLines, updateCartLines, removeCartLines
  *
  * Every function returns backend-agnostic `shared/commerce/types` via
- * `shopifyNormalize.ts` — the rest of the app never sees raw Shopify shapes.
+ * `shopifyNormalize.ts` â€” the rest of the app never sees raw Shopify shapes.
  */
 
 import { TRPCError } from "@trpc/server";
@@ -37,12 +37,14 @@ import {
  */
 export const SHOPIFY_API_VERSION = "2025-04";
 
-/** Lazy env access — tests can override `process.env` before each case. */
+/** Lazy env access â€” tests can override `process.env` before each case. */
 function getShopifyStoreDomain(): string {
   return process.env.SHOPIFY_STORE_DOMAIN ?? "";
 }
 function getShopifyStorefrontToken(): string {
-  return process.env.SHOPIFY_STOREFRONT_API_ACCESS_TOKEN ?? "";
+  return process.env.SHOPIFY_CUSTOM_STOREFRONT_TOKEN
+    || process.env.SHOPIFY_STOREFRONT_API_ACCESS_TOKEN
+    || "";
 }
 export function isShopifyConfigured(): boolean {
   return Boolean(getShopifyStoreDomain() && getShopifyStorefrontToken());
@@ -152,11 +154,7 @@ function unwrapCart(
 }
 
 // ---------------------------------------------------------------------------
-// GraphQL fragments — single source of truth for what we request.
-// Two rules baked in here:
-//   - Never include `quantityAvailable` (requires a scope we don't have →
-//     ACCESS_DENIED). Use `availableForSale: boolean` instead.
-//   - Pin the API version (env.ts), keep fragments aligned with normalize.ts.
+// GraphQL fragments â€” single source of truth for what we request.
 // ---------------------------------------------------------------------------
 
 const MONEY_FRAGMENT = /* GraphQL */ `
@@ -181,6 +179,7 @@ const VARIANT_FRAGMENT = /* GraphQL */ `
     id
     title
     availableForSale
+    quantityAvailable
     price { ...MoneyFields }
     compareAtPrice { ...MoneyFields }
     selectedOptions { name value }
@@ -244,6 +243,8 @@ const CART_FRAGMENT = /* GraphQL */ `
             ... on ProductVariant {
               id
               title
+              availableForSale
+              quantityAvailable
               price { ...MoneyFields }
               product {
                 handle

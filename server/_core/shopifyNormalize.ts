@@ -37,6 +37,7 @@ type RawVariant = {
   id: string;
   title: string;
   availableForSale: boolean;
+  quantityAvailable?: number | null;
   price: RawMoney;
   compareAtPrice: RawMoney | null;
   selectedOptions: RawSelectedOption[];
@@ -72,6 +73,8 @@ export type RawCartLine = {
   merchandise: {
     id: string;
     title: string;
+    availableForSale?: boolean;
+    quantityAvailable?: number | null;
     price: RawMoney;
     product: {
       handle: string;
@@ -114,6 +117,9 @@ function normalizeVariant(v: RawVariant): ProductVariant {
     price: normalizeMoney(v.price),
     compareAtPrice: v.compareAtPrice ? normalizeMoney(v.compareAtPrice) : null,
     availableForSale: v.availableForSale,
+    quantityAvailable: v.quantityAvailable != null
+      ? v.quantityAvailable
+      : (v.availableForSale ? null : 0),
     selectedOptions: (v.selectedOptions ?? []).map(normalizeSelectedOption),
   };
 }
@@ -159,6 +165,9 @@ function normalizeCartItem(line: RawCartLine): CartItem {
     image: img ? normalizeImage(img) : null,
     unitPrice: normalizeMoney(line.merchandise.price),
     quantity: line.quantity,
+    quantityAvailable: line.merchandise.quantityAvailable != null
+      ? line.merchandise.quantityAvailable
+      : (line.merchandise.availableForSale === false ? 0 : null),
     lineTotal: normalizeMoney(line.cost.totalAmount),
   };
 }

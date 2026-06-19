@@ -93,7 +93,18 @@ export default function CartDrawer() {
             </div>
           ) : (
             <div className="divide-y divide-white/[0.05]">
-              {cart.items.map((item) => (
+              {cart.items.map((item) => {
+                const maxQuantity = item.quantityAvailable ?? 10;
+                const isAtStockLimit = item.quantityAvailable !== null && item.quantity >= item.quantityAvailable;
+                const isAtCartLimit = item.quantityAvailable === null && item.quantity >= 10;
+                const disableIncrease = loading || isAtStockLimit || isAtCartLimit;
+                const increaseTitle = isAtStockLimit
+                  ? "Quantidade máxima disponível em estoque"
+                  : isAtCartLimit
+                    ? "Limite de 10 unidades por item"
+                    : undefined;
+
+                return (
                 <div key={item.lineId} className="flex gap-4 px-7 py-6">
                   {/* Image */}
                   <div className="w-20 h-24 flex-shrink-0 overflow-hidden bg-[#171717]">
@@ -139,10 +150,15 @@ export default function CartDrawer() {
                           {item.quantity}
                         </span>
                         <button
-                          onClick={() => updateQuantity(item.lineId, item.quantity + 1)}
-                          disabled={loading}
+                          onClick={() => {
+                            if (item.quantity < maxQuantity) {
+                              updateQuantity(item.lineId, item.quantity + 1);
+                            }
+                          }}
+                          disabled={disableIncrease}
                           className="w-7 h-7 flex items-center justify-center text-white/50 hover:text-[#F5F5F5] transition-colors disabled:opacity-30"
                           aria-label="Aumentar quantidade"
+                          title={increaseTitle}
                         >
                           <Plus size={11} strokeWidth={2} />
                         </button>
@@ -166,7 +182,8 @@ export default function CartDrawer() {
                     <X size={14} strokeWidth={1.5} />
                   </button>
                 </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

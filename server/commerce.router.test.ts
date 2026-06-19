@@ -20,6 +20,7 @@ beforeEach(() => {
   vi.stubGlobal("fetch", fetchMock);
   process.env.SHOPIFY_STORE_DOMAIN = "test.myshopify.com";
   process.env.SHOPIFY_STOREFRONT_API_ACCESS_TOKEN = "test-token";
+  delete process.env.SHOPIFY_CUSTOM_STOREFRONT_TOKEN;
 });
 
 afterEach(() => {
@@ -39,6 +40,7 @@ const rawVariant = {
   id: "gid://shopify/ProductVariant/1",
   title: "Default Title",
   availableForSale: true,
+  quantityAvailable: 3,
   price: { amount: "385.00", currencyCode: "USD" },
   compareAtPrice: null,
   selectedOptions: [{ name: "Title", value: "Default Title" }],
@@ -132,6 +134,8 @@ describe("commerce.cart", () => {
                   merchandise: {
                     id: rawVariant.id,
                     title: "Default Title",
+                    availableForSale: true,
+                    quantityAvailable: 3,
                     price: { amount: "385.00", currencyCode: "USD" },
                     product: {
                       handle: "aria",
@@ -164,6 +168,7 @@ describe("commerce.cart", () => {
       variantId: rawVariant.id,
       productHandle: "aria",
       quantity: 2,
+      quantityAvailable: 3,
     });
   });
 

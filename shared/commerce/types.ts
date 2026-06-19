@@ -42,6 +42,7 @@ export type ProductVariant = {
   price: Money;
   compareAtPrice: Money | null;
   availableForSale: boolean;
+  quantityAvailable: number | null;
   /** Flat list of selected options — sized for variant pickers. */
   selectedOptions: SelectedOption[];
 };
@@ -82,6 +83,7 @@ export type CartItem = {
   image: Image | null;
   unitPrice: Money;
   quantity: number;
+  quantityAvailable: number | null;
   lineTotal: Money;
 };
 

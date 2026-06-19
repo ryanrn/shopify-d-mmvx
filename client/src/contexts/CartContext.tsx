@@ -9,6 +9,7 @@ import {
   useMemo,
   useState,
 } from "react";
+import { toast } from "sonner";
 
 /**
  * Storefront cart context.
@@ -98,6 +99,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
     async (variantId: string, quantity: number = 1) => {
       setLoading(true);
       try {
+        const existingItem = cart?.items.find(item => item.variantId === variantId);
+        if (
+          existingItem &&
+          existingItem.quantityAvailable !== null &&
+          existingItem.quantity + quantity > existingItem.quantityAvailable
+        ) {
+          toast.error("Quantidade indisponível em estoque.");
+          return;
+        }
+
         if (!cartId || !cart) {
           const created = await utils.client.commerce.cart.create.mutate({
             lines: [{ variantId, quantity }],
@@ -113,6 +124,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
           setCart(updated);
         }
         setIsOpen(true);
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
+        if (msg.toLowerCase().includes("quantity") || msg.toLowerCase().includes("inventory") || msg.toLowerCase().includes("available")) {
+          toast.error("Quantidade indisponível em estoque.");
+        } else {
+          toast.error("Não foi possível adicionar o item. Tente novamente.");
+        }
       } finally {
         setLoading(false);
       }
@@ -130,6 +148,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
           lines: [{ lineId, quantity }],
         });
         if (updated) setCart(updated);
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
+        if (msg.toLowerCase().includes("quantity") || msg.toLowerCase().includes("inventory") || msg.toLowerCase().includes("available")) {
+          toast.error("Quantidade indisponível em estoque.");
+        } else {
+          toast.error("Não foi possível atualizar a quantidade.");
+        }
       } finally {
         setLoading(false);
       }
